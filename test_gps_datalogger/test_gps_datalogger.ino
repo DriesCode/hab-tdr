@@ -1,3 +1,15 @@
+/*
+  GPS: u-blox NEO 6-M
+  SD Card reader: Catalex microSD Card Adapter
+
+  GPS TX: PIN 3 ARD
+  GPS RX: PIN 4 ARD
+  SD Card CS: PIN 10 ARD
+  SD Card MOSI: PIN 11 ARD
+  SD Card MISO: PIN 12 ARD
+  SD Card SCK: PIN 13 ARD
+*/
+
 #include <SD.h>
 #include <SPI.h>
 #include <SoftwareSerial.h>
