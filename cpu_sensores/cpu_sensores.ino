@@ -4,10 +4,10 @@
 #include <LiquidCrystal.h>
 #include <Wire.h>
 
-#define RX_PIN 12
-#define TX_PIN 13
+/*#define RX_PIN 10
+#define TX_PIN 11*/
 
-SoftwareSerial arduino2 (RX_PIN, TX_PIN);
+//SoftwareSerial arduino2 (RX_PIN, TX_PIN);
 DHT sensorDHT (2, DHT22);
 Adafruit_BMP085 sensorBMP;
 LiquidCrystal lcd(8,9,4,5,6,7);
@@ -15,12 +15,17 @@ LiquidCrystal lcd(8,9,4,5,6,7);
 long slpresion = 102000;
 
 void setup() {
-  arduino2.begin(9600);
+ // arduino2.begin(9600);
   sensorDHT.begin();
   sensorBMP.begin();
   lcd.begin(16,2);
 
-  Serial.begin(9600);
+  //arduino2.print("Test");
+
+  Wire.begin();
+  Wire.beginTransmission(9);
+  Wire.write("Test");
+  Wire.endTransmission();
 
   printLcd(&lcd, "Arduino Core");
 
@@ -51,14 +56,20 @@ void loop() {
   printLcd(&lcd, "Enviando");
   
 
-  // FORMATO DATOS: TEMPERATURA,HUMEDAD,PRESION,ALTITUD,0
+  // FORMATO DATOS: $TEMPERATURA,HUMEDAD,PRESION,ALTITUD*
   String cadenaDatos = String((String) temperatura + "," + (String) humedad + "," + (String) presion + "," + (String) altitud + ",0");
 
   int i;
   for (i = 0; i < cadenaDatos.length(); i++) {
     char c = cadenaDatos.charAt(i);
-    Serial.write(c);
+    //arduino2.write(c);
+    
   }
+
+  Wire.begin();
+  Wire.beginTransmission(9);
+  Wire.write("Test");
+  Wire.endTransmission();
 
   delay(1500);
 

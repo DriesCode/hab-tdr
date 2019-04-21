@@ -3,9 +3,10 @@
 #include <SD.h>
 #include <SPI.h>
 #include <TinyGPS++.h>
+#include <Wire.h>
 
-#define RX_PIN 8
-#define TX_PIN 7
+#define RX_PIN 7
+#define TX_PIN 8
 
 #define GPS_RX_PIN 3
 #define GPS_TX_PIN 4
@@ -22,31 +23,31 @@ float temperatura, presion, humedad, altitud;
 uint8_t hora, minuto, segundo;
 String horaStr, minutoStr, segundoStr, tiempo, latiStr, longiStr;
 
+String datos;
 
 void setup() {
   Serial.begin(9600);
   arduino1.begin(9600);
-  ssGPS.begin(9600);
+  //ssGPS.begin(9600);
 
-  while (!arduino1) { ; }
-  Serial.println("arduino 1 conectado");
-  if (!SD.begin()) { Serial.println("Error iniciando la tarjeta SD"); while (1) { ; } }
-
-  pinMode (8, OUTPUT);
-  digitalWrite(8, HIGH);
-  delay(2000);
+  //while (!arduino1) { ; }
+  //Serial.println("arduino 1 conectado");
+  //if (!SD.begin()) { Serial.println("Error iniciando la tarjeta SD"); while (1) { ; } }
 
 }
 
 void loop() {
-  if (Serial.available() > 0) { digitalWrite(8, HIGH); }
-  else { digitalWrite(8, LOW); }
+  arduino1.listen();
 
-  
-  
+  if (arduino1.available() > 0) {
+    if (arduino1.read() == "$") {
+      
+    }
+  }
 
 }
 
+/*
 void getArduinoSensorData(SoftwareSerial* arduino1) {
   if (!arduino1->available() > 0) return;
 
@@ -75,4 +76,4 @@ void getTime(TinyGPSPlus* gps) {
   segundoStr = ((segundo == 0) ? String("00") : String(segundoStr));
 
   tiempo = String("[" + horaStr + ":" + minutoStr + ":" + segundoStr + "] ");
-}
+}*/
