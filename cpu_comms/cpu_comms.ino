@@ -28,26 +28,51 @@ String datos;
 void setup() {
   Serial.begin(9600);
   arduino1.begin(9600);
-  //ssGPS.begin(9600);
+  ssGPS.begin(9600);
+  
 
   //while (!arduino1) { ; }
   //Serial.println("arduino 1 conectado");
   //if (!SD.begin()) { Serial.println("Error iniciando la tarjeta SD"); while (1) { ; } }
-
 }
 
 void loop() {
+  datos = "";
   arduino1.listen();
 
-  if (arduino1.available() > 0) {
-    if (arduino1.read() == "$") {
-      
-    }
+  if (arduino1.isListening()) {
+    Serial.println("Listenign arduino");
+    while (arduino1.available() > 0) {
+      char c = arduino1.read();
+      if (c != "-1") datos += c;
   }
 
+    delay(1500);
+  
+    Serial.println(datos);
+  }
+  
+  
+
+  ssGPS.listen();
+
+  if (ssGPS.isListening()) {
+    Serial.println("listening gps");
+    while (ssGPS.available() > 0) gps.encode(ssGPS.read());
+
+    if (!gps.time.isUpdated()) return;
+    
+    getTime(&gps);
+    
+    Serial.println(tiempo);
+    
+    delay(1500);
+  }
+
+  
+  
 }
 
-/*
 void getArduinoSensorData(SoftwareSerial* arduino1) {
   if (!arduino1->available() > 0) return;
 
@@ -76,4 +101,4 @@ void getTime(TinyGPSPlus* gps) {
   segundoStr = ((segundo == 0) ? String("00") : String(segundoStr));
 
   tiempo = String("[" + horaStr + ":" + minutoStr + ":" + segundoStr + "] ");
-}*/
+}
