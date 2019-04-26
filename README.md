@@ -7,6 +7,12 @@ This project is my Treball de Recerca (TdR), a common project which has to be do
 
 ## Source code
 
+### Communication
+Arduino-communication is done with Serial communication. Data is sent from the Arduino which the sensors are connected at to the Arduino with the GPS, the SD card and the GSM module connected to.
+
+Data is sent as the following format:
+$TEMPERATURE,HUMIDITY,PREASSURE,ALTITUDE*
+
 ## Author
 Adrián Escalona
 Twitter: @a7escalona
