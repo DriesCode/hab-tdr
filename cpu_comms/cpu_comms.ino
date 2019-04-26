@@ -11,6 +11,8 @@
 #define GPS_RX_PIN 3 // Pin recibir datos GPS
 #define GPS_TX_PIN 4 // Pin enviar datos GPS ( No usado )
 
+#define LEDCOMMS 6 // LED que brillará al recibir datos
+
 File logs; // Archivo donde guardar logs
 SoftwareSerial arduino1 (RX_PIN, TX_PIN); // Conexión con el otro arduino
 SoftwareSerial ssGPS (GPS_RX_PIN, GPS_TX_PIN); // Conexión con el GPS
@@ -25,49 +27,79 @@ String horaStr, minutoStr, segundoStr, tiempo, latiStr, longiStr; // Variables d
 
 String datos; // Cadena de datos que se reciben del otro arduino
 
+bool newData;
+bool endData;
+bool newGPS;
+
 void setup() {
   Serial.begin(9600); // Iniciar comunicación serial con el ordenador
   arduino1.begin(9600); // Iniciar comunicación serial con el otro arduino
   ssGPS.begin(9600); // Iniciar comunicación serial con el GPS
+
+  pinMode(LEDCOMMS, OUTPUT);
+
+  newData = false;
+  newGPS = false;
   
-  if (!SD.begin()) { Serial.println("Error iniciando la tarjeta SD"); while (1) { ; } } // Iniciar el lector de la tarjeta SD. Si no se inicia, no ejecutar siguiente código
+  if (!SD.begin()) { Serial.println(F("Error iniciando la tarjeta SD")); while (1) { ; } } // Iniciar el lector de la tarjeta SD. Si no se inicia, no ejecutar siguiente código
+
+  while (Serial.available() > 0) Serial.read();
+  arduino1.listen();
+  while (arduino1.available() > 0) arduino1.read();
+  ssGPS.listen();
+  while (ssGPS.available() > 0) ssGPS.read();
+
+  arduino1.listen();
 }
 
 void loop() {
   datos = ""; // Reiniciar la cadena de datos en cada iteración del programa
-  arduino1.listen(); // Escuchar el puerto del arduino
-
+  
   if (arduino1.isListening()) { // Asegurarnos de que se está escuchando el puerto correcto
-    Serial.println("Listenign arduino");
-    while (arduino1.available() > 0) { // Ejecutar mientras recibamos datos del arduino
-      char c = arduino1.read(); // Guardar el byte que hemos recibido
-      if (c != "-1") datos += c; // Si es diferente a '-1', añadirlo a la cadena de texto
+    if (arduino1.available() > 0) {
+      char nextc = arduino1.read();
+      if (nextc == '$') {
+        newData = true;
+        char ch = ' ';
+        while (arduino1.available() > 0 && newData && !endData) {
+          ch = arduino1.read();
+          if (ch == 42) {
+            endData = true;
+          }
+          datos += ch;
+        }
+      }
     }
     
-    delay(1500);
-    Serial.println(datos);
+    if (newData && endData) {
+      Serial.println("Datos: " + datos);
+      digitalWrite(LEDCOMMS, HIGH);
+      delay(100);
+      digitalWrite(LEDCOMMS, LOW);
+      newGPS = true;
+    }
+    
+    newData = false;
+    endData = false;
+    
   }
 
-  ssGPS.listen(); // Escuchar el puerto del GPS
+  ssGPS.listen();
 
-  if (ssGPS.isListening()) { // Asegurarnos de que se está escuchando el puerto correcto
-    Serial.println("listening gps");
-    while (ssGPS.available() > 0) gps.encode(ssGPS.read()); // Preparar los datos del GPS para poder manipularlos con el objeto TinyGPSPlus
+  if (ssGPS.isListening() && newGPS) {
+    while (ssGPS.available() > 0) gps.encode(ssGPS.read());
+    
+    if (!gps.time.isUpdated()) return;
+    
+    getTime(&gps);
 
-    if (!gps.time.isUpdated()) return; // Si los datos de tiempo no están actualizados, no ejecutar siguiente código
-    
-    getTime(&gps); // Modificar variables que almacenan el valor del tiempo
-    
     Serial.println(tiempo);
-    
-    delay(1500);
   }
-}
 
-void getArduinoSensorData(SoftwareSerial* arduino1) {
-  if (!arduino1->available() > 0) return;
+  arduino1.listen();
+  newGPS = false;
+  delay(100);
 
-  Serial.println(arduino1->read());
 }
 
 void getLocation(TinyGPSPlus* gps) {

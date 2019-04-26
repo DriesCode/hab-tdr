@@ -7,6 +7,8 @@
 #define RX_PIN 11 // Pin recibir datos en Arduino ( No usado )
 #define TX_PIN 10 // Pin enviar datos en Arduino
 
+#define LEDCOMMS 3
+
 SoftwareSerial arduino2 (RX_PIN, TX_PIN); // Conexión con el arduino
 DHT sensorDHT (2, DHT22); // Conexión con el sensor de temperatura y humedad
 Adafruit_BMP085 sensorBMP; // Conexión con el sensor de presión y altitud
@@ -15,6 +17,8 @@ LiquidCrystal lcd(8,9,4,5,6,7); // Conexión con el LCD
 long slpresion = 102000; // Variable para almacenar la presión actual al nivel del mar
 
 float humedad, temperatura, presion, altitud; // Variables que almacenarán los valores de los sensores
+
+bool error, lastUpdateError;
 
 void setup() {
   // Iniciar la comunicación con los dispositivos
@@ -25,15 +29,29 @@ void setup() {
 
   Serial.begin(9600); // Iniciar comunicación con el ordenador
 
+  pinMode(LEDCOMMS, OUTPUT);
+
   // Imprimir información sobre el programa
   printLcd(&lcd, "Arduino Core");
   delay(3000);
   printLcd(&lcd, "Altimetro: " + (String) slpresion + " Pa");
   delay(2500);
 
+  error = false;
+  lastUpdateError = false;
+
+  printLcd(&lcd, "Estado nominal");
 }
 
 void loop() {
+
+  while (error) {
+    printLcd(&lcd, "Error sensores");
+  }
+
+  if (!error && lastUpdateError) {
+    printLcd(&lcd, "Estado nominal");
+  }
 
   // Leer valores de los sensores
   humedad = sensorDHT.readHumidity();
@@ -42,21 +60,28 @@ void loop() {
   altitud = sensorBMP.readAltitude(slpresion);
 
   if (isnan(humedad) || isnan(temperatura) || isnan(presion) || isnan(altitud)) { // Si algún valor es nulo, no continuar el programa
-      printLcd(&lcd, "Error de los sensores");
-      while (1) {;}
+      error = true;
   }
+  
+  // FORMATO DATOS: $TEMPERATURA,HUMEDAD,PRESION,ALTITUD*
+  String cadenaDatos = String("$" + (String) temperatura + "," + (String) humedad + "," + (String) presion + "," + (String) altitud + "*"); // Construir la cadena de datos
 
-  printLcd(&lcd, "Datos captados"); // Mostrar que los datos ya se han recogido
-  delay(1500);
+  sendSerial(&arduino2, cadenaDatos); // Enviar los datos por serial al otro arduino
 
-  printLcd(&lcd, "Enviando"); // Mostrar que se van a enviar los datos
+  delay(1500); 
+  
+}
 
-  // FORMATO DATOS: TEMPERATURA,HUMEDAD,PRESION,ALTITUD,0
-  String cadenaDatos = String((String) temperatura + "," + (String) humedad + "," + (String) presion + "," + (String) altitud + "*"); // Construir la cadena de datos
+void sendSerial(SoftwareSerial* sw, String data) {
+  size_t bytesWritten = sw->print(data);
 
-  arduino2.println(cadenaDatos); // Enviar los datos por serial al otro arduino
-  delay(1500);
-
+  if (bytesWritten == data.length()) {
+    digitalWrite(LEDCOMMS, HIGH);
+  } else {
+    Serial.println("Error sending: " + data);
+  }
+  delay(100);
+  digitalWrite(LEDCOMMS, LOW);
 }
 
 // Rutina para imprimir texto en la LCD
