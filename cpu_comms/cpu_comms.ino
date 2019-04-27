@@ -65,8 +65,9 @@ void loop() {
           ch = arduino1.read();
           if (ch == 42) {
             endData = true;
+          }else {
+            datos += ch;  
           }
-          datos += ch;
         }
       }
     }
