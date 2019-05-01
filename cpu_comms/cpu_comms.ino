@@ -12,6 +12,7 @@
 #define GPS_TX_PIN 4 // Pin enviar datos GPS ( No usado )
 
 #define LEDCOMMS 6 // LED que brillará al recibir datos
+#define ERRORPIN 2 // Pin que se activará si hay un error
 
 File logs; // Archivo donde guardar logs
 SoftwareSerial arduino1 (RX_PIN, TX_PIN); // Conexión con el otro arduino
@@ -37,6 +38,7 @@ void setup() {
   ssGPS.begin(9600); // Iniciar comunicación serial con el GPS
 
   pinMode(LEDCOMMS, OUTPUT);
+  pinMode(ERRORPIN, OUTPUT);
 
   newData = false;
   newGPS = false;
@@ -49,20 +51,105 @@ void setup() {
   ssGPS.listen();
   while (ssGPS.available() > 0) ssGPS.read();
 
+  digitalWrite(ERRORPIN, LOW);
+
   arduino1.listen();
 }
 
 void loop() {
-  datos = ""; // Reiniciar la cadena de datos en cada iteración del programa
+  getSensorData(&arduino1); // Datos meteo
+
+  // GPS
+
+  ssGPS.listen();
+
+  if (ssGPS.isListening() && newGPS) {
+    while (ssGPS.available()) gps.encode(ssGPS.read());
+
+    if (!gps.time.isUpdated()) return;
+
+    getTime(&gps);
+
+    Serial.println(tiempo);
+  }
+
+  if (datos.length() == 27) { // Parser datos
+    unsigned int tamDatos = (datos.length())+1;
+    char c_datos [tamDatos];
   
-  if (arduino1.isListening()) { // Asegurarnos de que se está escuchando el puerto correcto
-    if (arduino1.available() > 0) {
-      char nextc = arduino1.read();
+    datos.toCharArray(c_datos, sizeof(c_datos));
+    c_datos[(sizeof(c_datos)-1)] = ',';
+    c_datos[sizeof(c_datos)] = '\0';
+    
+    /*
+      j = 1 -> Temperatura
+      j = 2 -> Humedad
+      j = 3 -> Presion
+      j = 4 -> Altitud
+    */
+    
+    for (int i=0, j=0, k=0, ki = 0; i < sizeof(c_datos); i++) {
+      if (c_datos[i] == ','){
+        ki = k;
+        k = i;
+        j++;
+  
+        unsigned int numCarac;
+  
+        if (j == 1) {
+          numCarac = (k-ki); // Numero de caracteres del valor
+        }else {
+          numCarac = ((k-ki)-1); // Numero de caracteres del valor
+        }
+  
+        if (j == 1) {
+          char temp_str[numCarac];
+          strncpy (temp_str, &c_datos[ki], numCarac);
+          temp_str[sizeof(temp_str)] = '\0';
+  
+          temperatura = atof(temp_str);
+        } else if (j == 2) {
+          char hum_str[numCarac];
+          strncpy (hum_str, &c_datos[++ki], numCarac);
+          hum_str[sizeof(hum_str)] = '\0';
+  
+          humedad = atof(hum_str);
+        } else if (j == 3) {
+          char pres_str[numCarac];
+          strncpy(pres_str, &c_datos[++ki], numCarac);
+          pres_str[sizeof(pres_str)] = '\0';
+  
+          presion = atof(pres_str);
+        } else if (j == 4) {
+          char alt_str[numCarac];
+          strncpy(alt_str, &c_datos[++ki], numCarac);
+          alt_str[sizeof(alt_str)] = '\0';
+  
+          altitud = atof(alt_str);
+        } else {
+          Serial.println("Error j");
+          digitalWrite(ERRORPIN, HIGH);
+        }
+      }
+    }
+  }
+
+  arduino1.listen();
+  newGPS = false;
+  
+  delay(100);
+}
+
+void getSensorData(SoftwareSerial* arduino) {
+  if (arduino->isListening()) { 
+    if (arduino->available() > 0) {
+      char nextc = arduino->read();
       if (nextc == '$') {
         newData = true;
+        datos = ""; // Reiniciar la cadena de datos en cada iteración del programa
         char ch = ' ';
-        while (arduino1.available() > 0 && newData && !endData) {
-          ch = arduino1.read();
+        while (arduino->available() > 0 && newData && !endData) {
+          ch = arduino->read();
           if (ch == 42) {
             endData = true;
           }else {
@@ -84,23 +171,6 @@ void loop() {
     endData = false;
     
   }
-
-  ssGPS.listen();
-
-  if (ssGPS.isListening() && newGPS) {
-    while (ssGPS.available() > 0) gps.encode(ssGPS.read());
-    
-    if (!gps.time.isUpdated()) return;
-    
-    getTime(&gps);
-
-    Serial.println(tiempo);
-  }
-
-  arduino1.listen();
-  newGPS = false;
-  delay(100);
-
 }
 
 void getLocation(TinyGPSPlus* gps) {
@@ -112,6 +182,8 @@ void getTime(TinyGPSPlus* gps) {
   hora = gps->time.hour(); // Obtener la hora actual
   minuto = gps->time.minute(); // Obtener el minuto actual
   segundo = gps->time.second(); // Obtener el segundo actual
+
+  hora += 2; // Convertir a hora local
 
   // Si cualquier valor (minuto/segundo/hora) solo tiene un dígito, añadirle un cero a la izquierda
   

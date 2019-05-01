@@ -44,7 +44,9 @@ void setup() {
 }
 
 void loop() {
-
+  if (digitalRead(12)) error = true;
+  else error = false;
+  
   while (error) {
     printLcd(&lcd, "Error sensores");
   }
