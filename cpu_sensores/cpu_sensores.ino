@@ -1,8 +1,7 @@
 #include <SoftwareSerial.h>
 #include <DHT.h>
-#include <Adafruit_BMP085.h>
+#include <SFE_BMP180.h>
 #include <LiquidCrystal.h>
-#include <Wire.h>
 
 #define RX_PIN 11 // Pin recibir datos en Arduino ( No usado )
 #define TX_PIN 10 // Pin enviar datos en Arduino
@@ -12,10 +11,10 @@
 
 SoftwareSerial arduino2 (RX_PIN, TX_PIN); // Conexión con el arduino
 DHT sensorDHT (2, DHT22); // Conexión con el sensor de temperatura y humedad
-Adafruit_BMP085 sensorBMP; // Conexión con el sensor de presión y altitud
+SFE_BMP180 sensorBMP; // Conexión con el sensor de presión y altitud
 LiquidCrystal lcd(8,9,4,5,6,7); // Conexión con el LCD
 
-long slpresion = 102000; // Variable para almacenar la presión actual al nivel del mar
+long slpresion = 1020; // Variable para almacenar la presión actual al nivel del mar
 
 float humedad, temperatura, presion, altitud; // Variables que almacenarán los valores de los sensores
 
@@ -60,8 +59,8 @@ void loop() {
   // Leer valores de los sensores
   humedad = sensorDHT.readHumidity();
   temperatura = sensorDHT.readTemperature();
-  presion = sensorBMP.readPressure();
-  altitud = sensorBMP.readAltitude(slpresion);
+  presion = obtenerPresion();
+  altitud = sensorBMP.altitude(presion, slpresion);
 
   if (isnan(humedad) || isnan(temperatura) || isnan(presion) || isnan(altitud)) { // Si algún valor es nulo, no continuar el programa
       error = true;
@@ -86,6 +85,36 @@ void loop() {
   
 }
 
+// Rutina para leer la presion del BMP180
+double obtenerPresion() {
+  char estado;
+  double temp, pres;
+
+  estado = sensorBMP.startTemperature();
+
+  if (estado != 0) {
+    delay(estado);
+
+    estado = sensorBMP.getTemperature(temp);
+
+    if (estado != 0) {
+      estado = sensorBMP.startPressure(3);
+
+      if (estado != 0) {
+        delay(estado);
+
+        estado = sensorBMP.getPressure(pres, temp);
+
+        if (estado != 0) {
+          return (pres);
+          
+        }
+      }
+    }
+  }
+}
+
+// Rutina para enviar datos por Serial
 void sendSerial(SoftwareSerial* sw, String data) {
   size_t bytesWritten = sw->print(data);
 

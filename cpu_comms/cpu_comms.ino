@@ -1,8 +1,6 @@
 
 #include <SoftwareSerial.h>
 #include <SD.h>
-#include <SPI.h>
-#include <Wire.h>
 #include <TinyGPS++.h>
 
 #define RX_PIN 7 // Pin recibir datos
