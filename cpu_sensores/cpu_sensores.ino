@@ -14,11 +14,11 @@ DHT sensorDHT (2, DHT22); // Conexión con el sensor de temperatura y humedad
 SFE_BMP180 sensorBMP; // Conexión con el sensor de presión y altitud
 LiquidCrystal lcd(8,9,4,5,6,7); // Conexión con el LCD
 
-long slpresion = 1020; // Variable para almacenar la presión actual al nivel del mar
+long presionBase = 1020; // Variable para almacenar la presión actual al nivel del mar
 
 float humedad, temperatura, presion, altitud; // Variables que almacenarán los valores de los sensores
 
-bool error, lastUpdateError;
+bool error;
 
 void setup() {
   // Iniciar la comunicación con los dispositivos
@@ -35,37 +35,37 @@ void setup() {
   // Imprimir información sobre el programa
   printLcd(&lcd, "Arduino Core");
   delay(3000);
-  printLcd(&lcd, "Altimetro: " + (String) slpresion + " Pa");
+  printLcd(&lcd, "Altimetro: " + (String) presionBase + " hPa");
   delay(2500);
-
-  error = false;
-  lastUpdateError = true;
 
   printLcd(&lcd, "Estado nominal");
 }
 
 void loop() {
-  while (digitalRead(ERRORPIN)) {
-    printLcd(&lcd, "Error");
-    error = true;
-    lastUpdateError = true;
-  }
+  error = false;
 
-  if (!error && lastUpdateError) {
-    printLcd(&lcd, "Estado nominal");
-    lastUpdateError = false;
-  }
-
-  // Leer valores de los sensores
+  // Leer datos de los sensores
+  
   humedad = sensorDHT.readHumidity();
   temperatura = sensorDHT.readTemperature();
   presion = obtenerPresion();
-  altitud = sensorBMP.altitude(presion, slpresion);
+  altitud = sensorBMP.altitude(presion, presionBase);
 
+  // Comprobar si hay error
+  
   if (isnan(humedad) || isnan(temperatura) || isnan(presion) || isnan(altitud)) { // Si algún valor es nulo, no continuar el programa
       error = true;
   }
-  
+
+  if (digitalRead(ERRORPIN)) {
+    error = true;
+  }
+
+  // Si hay un error, no ejecutar programa e imprimir "Error"
+
+  if (error) {
+    printLcd (&lcd, "Error");
+  } else {
   // FORMATO DATOS: $TEMPERATURA,HUMEDAD,PRESION,ALTITUD*
   String cadenaDatos = String("$" + (String) temperatura + "," + (String) humedad + "," + (String) presion + "," + (String) altitud + "*"); // Construir la cadena de datos
 
@@ -82,7 +82,7 @@ void loop() {
 
   printLcd(&lcd, F("Delay"));
   delay(11000);  // 11 s + 4 s = 15 s
-  
+  }  
 }
 
 // Rutina para leer la presion del BMP180
@@ -107,7 +107,6 @@ double obtenerPresion() {
 
         if (estado != 0) {
           return (pres);
-          
         }
       }
     }

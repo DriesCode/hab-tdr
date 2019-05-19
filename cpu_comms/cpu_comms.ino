@@ -58,7 +58,9 @@ void setup() {
   digitalWrite(LEDCOMMS, LOW);
   
   
-  if (!SD.begin()) { Serial.println(F("Error iniciando la tarjeta SD")); digitalWrite(LEDSDERROR, HIGH); while (1); } // Iniciar el lector de la tarjeta SD. Si no se inicia, no ejecutar siguiente código
+  if (!SD.begin()) { digitalWrite(LEDSDERROR, HIGH); while (1); } // Iniciar el lector de la tarjeta SD. Si no se inicia, no ejecutar siguiente código
+
+  // Liberar buffers
 
   ssGPS.listen();
   while (ssGPS.available() > 0) ssGPS.read();
@@ -140,7 +142,7 @@ void loop() {
   
           altitud = atof(alt_str);
         } else {
-          digitalWrite(ERRORPIN, HIGH);
+          digitalWrite(ERRORPIN, HIGH); // Si hay error, activar pin
         }
       }
     }
