@@ -14,6 +14,7 @@ int mode = 0;  /*
                   3 = Altitud
               */
 
+
 void setup() {
   sensorDHT.begin();
   sensorBMP.begin();

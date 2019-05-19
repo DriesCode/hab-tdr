@@ -2,6 +2,7 @@
 #include <DHT.h>
 #include <SFE_BMP180.h>
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
 
 #define RX_PIN 11 // Pin recibir datos en Arduino ( No usado )
 #define TX_PIN 10 // Pin enviar datos en Arduino
@@ -14,11 +15,13 @@ DHT sensorDHT (2, DHT22); // Conexión con el sensor de temperatura y humedad
 SFE_BMP180 sensorBMP; // Conexión con el sensor de presión y altitud
 LiquidCrystal lcd(8,9,4,5,6,7); // Conexión con el LCD
 
-long presionBase = 1020; // Variable para almacenar la presión actual al nivel del mar
+double presionBase; // Variable para almacenar la presión actual al nivel del mar
 
 float humedad, temperatura, presion, altitud; // Variables que almacenarán los valores de los sensores
 
-bool error;
+bool error, debug;
+
+double obtenerPresion();
 
 void setup() {
   // Iniciar la comunicación con los dispositivos
@@ -29,8 +32,19 @@ void setup() {
 
   Serial.begin(9600); // Iniciar comunicación con el ordenador
 
+  debug = digitalRead(13);
+
   pinMode(LEDCOMMS, OUTPUT);
   pinMode(ERRORPIN, INPUT);
+
+  // Get baseline pressure
+
+  if (debug) {
+    presionBase = obtenerPresion();
+    saveEEPROM(0, &presionBase);
+  } else {
+    readEEPROM(0, &presionBase);
+  }
 
   // Imprimir información sobre el programa
   printLcd(&lcd, "Arduino Core");
@@ -83,6 +97,16 @@ void loop() {
   printLcd(&lcd, F("Delay"));
   delay(11000);  // 11 s + 4 s = 15 s
   }  
+}
+
+// Rutina para guardar datos en EEPROM
+template <class T> void saveEEPROM(int item, T &value) {
+  EEPROM.put(item, *value);
+}
+
+// Rutina para leer datos en EEPROM
+template <class T> void readEEPROM(int item, T &var) {
+  EEPROM.get(item, *var);
 }
 
 // Rutina para leer la presion del BMP180
