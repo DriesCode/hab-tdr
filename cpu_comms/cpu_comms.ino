@@ -39,11 +39,8 @@ void setup() {
   pinMode(ERRORPIN, OUTPUT);
   pinMode(LEDSD, OUTPUT);
   pinMode(LEDSDERROR, OUTPUT);
-  
 
-  newData = false;
-  newGPS = false;
-  saveData = false;
+  newData = newGPS = saveData = false;
 
   digitalWrite(LEDSD, HIGH); // Check LED
   delay(25);
@@ -89,7 +86,7 @@ void loop() {
   // Algoritmo parsear datos
   
   if (datos.length() > 0) {
-    unsigned int tamDatos = (datos.length())+1;
+    unsigned int tamDatos = datos.length()+1;
     char c_datos [tamDatos];
   
     datos.toCharArray(c_datos, sizeof(c_datos));
@@ -103,41 +100,41 @@ void loop() {
       j = 4 -> Altitud
     */
     
-    for (int i=0, j=0, k=0, ki = 0; i < sizeof(c_datos); i++) {
+    for (int i=0, numComa=0, lecturaActual=0, lecturaAnterior = 0; i < sizeof(c_datos); i++) {
       if (c_datos[i] == ','){
-        ki = k;
-        k = i;
-        j++;
+        lecturaAnterior = lecturaActual;
+        lecturaActual = i;
+        numComa++;
   
         unsigned int numCarac;
   
-        if (j == 1) {
-          numCarac = (k-ki); // Numero de caracteres del valor
+        if (numComa == 1) {
+          numCarac = (lecturaActual-lecturaAnterior); // Numero de caracteres del valor
         }else {
-          numCarac = ((k-ki)-1); // Numero de caracteres del valor
+          numCarac = ((lecturaActual-lecturaAnterior)-1); // Numero de caracteres del valor
         }
   
-        if (j == 1) {
+        if (numComa == 1) {
           char temp_str[numCarac];
-          strncpy (temp_str, &c_datos[ki], numCarac);
+          strncpy (temp_str, &c_datos[lecturaAnterior], numCarac);
           temp_str[sizeof(temp_str)] = '\0';
   
           temperatura = atof(temp_str);
-        } else if (j == 2) {
+        } else if (numComa == 2) {
           char hum_str[numCarac];
-          strncpy (hum_str, &c_datos[++ki], numCarac);
+          strncpy (hum_str, &c_datos[++lecturaAnterior], numCarac);
           hum_str[sizeof(hum_str)] = '\0';
   
           humedad = atof(hum_str);
-        } else if (j == 3) {
+        } else if (numComa == 3) {
           char pres_str[numCarac];
-          strncpy(pres_str, &c_datos[++ki], numCarac);
+          strncpy(pres_str, &c_datos[++lecturaAnterior], numCarac);
           pres_str[sizeof(pres_str)] = '\0';
   
           presion = atof(pres_str);
-        } else if (j == 4) {
+        } else if (numComa == 4) {
           char alt_str[numCarac];
-          strncpy(alt_str, &c_datos[++ki], numCarac);
+          strncpy(alt_str, &c_datos[++lecturaAnterior], numCarac);
           alt_str[sizeof(alt_str)] = '\0';
   
           altitud = atof(alt_str);
@@ -208,8 +205,6 @@ void getSensorData(SoftwareSerial* arduino) {
     
     newData = false;
     endData = false;
-    
-    
   }
 }
 

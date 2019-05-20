@@ -32,18 +32,23 @@ void setup() {
 
   Serial.begin(9600); // Iniciar comunicación con el ordenador
 
+  pinMode(13, INPUT);
   debug = digitalRead(13);
 
   pinMode(LEDCOMMS, OUTPUT);
   pinMode(ERRORPIN, INPUT);
 
-  // Get baseline pressure
-
+  // Get baseline pressure if debug is enabled
   if (debug) {
+    printLcd(&lcd, "Debug enabled");
+    delay(1000);
     presionBase = obtenerPresion();
-    saveEEPROM(0, &presionBase);
+    saveEEPROM(0, presionBase);
+
+    Serial.println(presionBase);
   } else {
-    readEEPROM(0, &presionBase);
+    readEEPROM(0, presionBase);
+    Serial.println(presionBase);
   }
 
   // Imprimir información sobre el programa
@@ -101,12 +106,12 @@ void loop() {
 
 // Rutina para guardar datos en EEPROM
 template <class T> void saveEEPROM(int item, T &value) {
-  EEPROM.put(item, *value);
+  EEPROM.put(item, value);
 }
 
 // Rutina para leer datos en EEPROM
 template <class T> void readEEPROM(int item, T &var) {
-  EEPROM.get(item, *var);
+  EEPROM.get(item, var);
 }
 
 // Rutina para leer la presion del BMP180
@@ -131,11 +136,11 @@ double obtenerPresion() {
 
         if (estado != 0) {
           return (pres);
-        }
-      }
-    }
-  }
-}
+        } else error = true;
+      } else error = true;
+    } else error = true;
+  } else error = true;
+} 
 
 // Rutina para enviar datos por Serial
 void sendSerial(SoftwareSerial* sw, String data) {
