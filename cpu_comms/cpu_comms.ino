@@ -14,6 +14,8 @@
 #define LEDSDERROR 9 // LED que brillará al haber error de SD
 #define LEDSD 5 // LED que brillará cuando se escriba en la SD
 
+#define SDcspin 10
+
 File logs; // Archivo donde guardar logs ("LOGS.TXT")
 SoftwareSerial arduino1 (RX_PIN, TX_PIN); // Conexión con el otro arduino
 SoftwareSerial ssGPS (GPS_RX_PIN, GPS_TX_PIN); // Conexión con el GPS
@@ -55,7 +57,7 @@ void setup() {
   digitalWrite(LEDCOMMS, LOW);
   
   
-  if (!SD.begin()) { digitalWrite(LEDSDERROR, HIGH); while (1); } // Iniciar el lector de la tarjeta SD. Si no se inicia, no ejecutar siguiente código
+  if (!SD.begin(SDcspin)) { digitalWrite(LEDSDERROR, HIGH); while (1); } // Iniciar el lector de la tarjeta SD. Si no se inicia, no ejecutar siguiente código
 
   // Liberar buffers
 
@@ -226,18 +228,12 @@ void getTime(TinyGPSPlus* gps) {
 
   // Si cualquier valor (minuto/segundo/hora) solo tiene un dígito, añadirle un cero a la izquierda
   
-  horaStr = ((hora < 10 && hora != 0) ? zero += hora : String(hora)); 
+  horaStr = (hora < 10) ? zero += hora : String(hora); 
   zero = "0";
-  minutoStr = ((minuto < 10 && minuto != 0) ? zero += minuto : String(minuto));
+  minutoStr = (minuto < 10) ? zero += minuto : String(minuto);
   zero = "0";
-  segundoStr = ((segundo < 10 && segundo != 0) ? zero += segundo : String(segundo));
+  segundoStr = (segundo < 10) ? zero += segundo : String(segundo);
   zero = "0";
-
-  // Si cualquier valor es cero, añadir otro
-
-  horaStr = ((hora == 0) ? String("00") : String(horaStr));
-  minutoStr = ((minuto == 0) ? String("00") : String(minutoStr));
-  segundoStr = ((segundo == 0) ? String("00") : String(segundoStr));
 
   tiempo = String("[" + horaStr + ":" + minutoStr + ":" + segundoStr + "] "); // Agrupar los datos en una cadena de texto conjunta
 }

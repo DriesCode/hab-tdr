@@ -56,13 +56,9 @@ void setup() {
   delay(3000);
   printLcd(&lcd, "Altimetro: " + (String) presionBase + " hPa");
   delay(2500);
-
-  printLcd(&lcd, "Estado nominal");
 }
 
 void loop() {
-  error = false;
-
   // Leer datos de los sensores
   
   humedad = sensorDHT.readHumidity();
@@ -74,14 +70,15 @@ void loop() {
   
   if (isnan(humedad) || isnan(temperatura) || isnan(presion) || isnan(altitud)) { // Si algún valor es nulo, no continuar el programa
       error = true;
+  } else {
+    error = false;
   }
 
-  if (digitalRead(ERRORPIN)) {
-    error = true;
-  }
+  /*if (!error) {
+    error = digitalRead(ERRORPIN);
+  }*/
 
   // Si hay un error, no ejecutar programa e imprimir "Error"
-
   if (error) {
     printLcd (&lcd, "Error");
   } else {
@@ -149,7 +146,8 @@ void sendSerial(SoftwareSerial* sw, String data) {
   if (bytesWritten == data.length()) {
     digitalWrite(LEDCOMMS, HIGH);
   } else {
-    Serial.println("Error sending: " + data);
+    printLcd(&lcd, "Error sending data");
+    error = true;
   }
   delay(100);
   digitalWrite(LEDCOMMS, LOW);
