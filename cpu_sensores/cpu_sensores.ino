@@ -25,7 +25,7 @@ double obtenerPresion();
 
 void setup() {
   // Iniciar la comunicación con los dispositivos
-  arduino2.begin(9600); 
+  arduino2.begin(9600);
   sensorDHT.begin();
   sensorBMP.begin();
   lcd.begin(16,2); // Iniciar la LCD y especificar filas y columnas
@@ -60,14 +60,14 @@ void setup() {
 
 void loop() {
   // Leer datos de los sensores
-  
+
   humedad = sensorDHT.readHumidity();
   temperatura = sensorDHT.readTemperature();
   presion = obtenerPresion();
   altitud = sensorBMP.altitude(presion, presionBase);
 
   // Comprobar si hay error
-  
+
   if (isnan(humedad) || isnan(temperatura) || isnan(presion) || isnan(altitud)) { // Si algún valor es nulo, no continuar el programa
       error = true;
   } else {
@@ -98,7 +98,7 @@ void loop() {
 
   printLcd(&lcd, F("Delay"));
   delay(11000);  // 11 s + 4 s = 15 s
-  }  
+  }
 }
 
 // Rutina para guardar datos en EEPROM
@@ -137,7 +137,7 @@ double obtenerPresion() {
       } else error = true;
     } else error = true;
   } else error = true;
-} 
+}
 
 // Rutina para enviar datos por Serial
 void sendSerial(SoftwareSerial* sw, String data) {
