@@ -33,7 +33,7 @@ String datos; // Cadena de datos que se reciben del otro arduino
 bool newData, endData, newGPS, saveData;
 
 void setup() {
-  Serial.begin(9600); // Iniciar comunicación serial con el ordenador
+  Serial.begin(115200); // Iniciar comunicación serial con el ordenador
   arduino1.begin(9600); // Iniciar comunicación serial con el otro arduino
   ssGPS.begin(9600); // Iniciar comunicación serial con el GPS
 
@@ -168,6 +168,11 @@ void loop() {
     logs.close(); // Cerrar archivo para guardar
     digitalWrite(LEDSD, LOW);
     saveData = false;
+
+    String dataToSerial = String((String)temperatura+","+(String)humedad+","+(String)presion+","+(String)altitud+","+(String)lati+","+(String)longi);
+    char dTS_c[dataToSerial.length()];
+    dataToSerial.toCharArray(dTS_c, sizeof(dTS_c));
+    Serial.write(dTS_c);
   }
 
   arduino1.listen();

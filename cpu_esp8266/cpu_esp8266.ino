@@ -39,7 +39,7 @@ void setup() {
   alreadyConnected = true;
 }
 
-String data[4];
+String data[6];
 String token = "&field";
 
 bool dataToSend = false;
@@ -50,7 +50,6 @@ HTTPClient http;
 
 void loop() {
   String url = "http://api.thingspeak.com/update?api_key=M5Z4I1ZCB8ZD12UI";
-  digitalWrite(LED_BUILTIN, LOW);
   if (Serial.available() > 0 && !dataToSend) {
     String d = Serial.readString();
     Serial.println("Got: " + d);
@@ -77,7 +76,7 @@ void loop() {
     Serial.println("Sending data...");
     if ((WiFiMulti.run() == WL_CONNECTED)) {
       Serial.println("Creating URL for GET request...");
-      for (int i = 1; i < 5; i++) {
+      for (int i = 1; i < 7; i++) {
         url.concat(token);
         url.concat(i);
         url.concat(String("="));
@@ -106,7 +105,6 @@ void loop() {
             if (payload != "0") {
               dataToSend = false;
               gotValues = false;
-              digitalWrite(LED_BUILTIN, HIGH);
               delay(500);
             }
           }
