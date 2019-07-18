@@ -19,7 +19,7 @@ Arduino-ESP8266 communication is done with Serial communication as well. Data is
 Data is sent as the following format:
 TEMPERATURE,HUMIDITY,PREASSURE,HEIGHT
 
-### Folders
+## Folders
 ### cpu_
 Every folder whose name starts with 'cpu' contains the code for each MCU.
 
