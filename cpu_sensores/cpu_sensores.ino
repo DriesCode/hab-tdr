@@ -82,22 +82,24 @@ void loop() {
   if (error) {
     printLcd (&lcd, "Error");
   } else {
-  // FORMATO DATOS: $TEMPERATURA,HUMEDAD,PRESION,ALTITUD*
-  String cadenaDatos = String("$" + (String) temperatura + "," + (String) humedad + "," + (String) presion + "," + (String) altitud + "*"); // Construir la cadena de datos
-
-  printLcd(&lcd, (String) temperatura);
-  delay(1000);
-  printLcd(&lcd, (String) humedad);
-  delay(1000);
-  printLcd(&lcd, (String) presion);
-  delay(1000);
-  printLcd(&lcd, (String) altitud);
-  delay(1000);
-
-  sendSerial(&arduino2, cadenaDatos); // Enviar los datos por serial al otro arduino
-
-  printLcd(&lcd, F("Delay"));
-  delay(11000);  // 11 s + 4 s = 15 s
+    // FORMATO DATOS: $TEMPERATURA,HUMEDAD,PRESION,ALTITUD*
+    String cadenaDatos = String("$" + (String) temperatura + "," + (String) humedad + "," + (String) presion + "," + (String) altitud + "*"); // Construir la cadena de datos
+  
+    printLcd(&lcd, F("Temperatura"), (String) temperatura);
+    delay(1000);
+    printLcd(&lcd, F("Humedad"), (String) humedad);
+    delay(1000);
+    printLcd(&lcd, F("Presion"), (String) presion);
+    delay(1000);
+    printLcd(&lcd, F("Altura"), (String) altitud);
+    delay(1000);
+  
+    sendSerial(&arduino2, cadenaDatos); // Enviar los datos por serial al otro arduino
+  
+    for (int i = 0; i < 116; i++) {
+      printLcd(&lcd, F("Espere"), (String) (116-i));
+      delay(1000);
+    }
   }
 }
 
@@ -156,6 +158,7 @@ void sendSerial(SoftwareSerial* sw, String data) {
 // Rutina para imprimir texto en la LCD
 void printLcd(LiquidCrystal* lcd, String text) {
   lcd->clear();
+  lcd->setCursor(0,0);
   if (text.length() > 16) {
     for (int i = 0; i < text.length(); i++) {
       if (i == 16) {
@@ -166,4 +169,13 @@ void printLcd(LiquidCrystal* lcd, String text) {
   } else {
     lcd->print(text);
   }
+}
+
+// Segunda rutina. text1.length() < 16 // text2.length() < 16
+void printLcd(LiquidCrystal* lcd, String text1, String text2) {
+  lcd->clear();
+  lcd->setCursor(0,0);
+  lcd->print(text1);
+  lcd->setCursor(0,1);
+  lcd->print(text2);  
 }

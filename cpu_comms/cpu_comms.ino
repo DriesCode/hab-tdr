@@ -169,10 +169,14 @@ void loop() {
     digitalWrite(LEDSD, LOW);
     saveData = false;
 
-    String dataToSerial = String((String)temperatura+","+(String)humedad+","+(String)presion+","+(String)altitud+","+(String)lati+","+(String)longi);
-    char dTS_c[dataToSerial.length()];
+    String dataToSerial = String((String)temperatura+","+(String)humedad+","+(String)presion+","+(String)altitud+",");//+(String)lati+","+(String)longi);
+    /*char dTS_c[dataToSerial.length()];
     dataToSerial.toCharArray(dTS_c, sizeof(dTS_c));
-    Serial.write(dTS_c);
+    Serial.write(dTS_c);*/
+    Serial.print(dataToSerial);
+    Serial.print(lati, 6);
+    Serial.print(",");
+    Serial.print(longi, 6);
   }
 
   arduino1.listen();
