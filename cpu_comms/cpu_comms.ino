@@ -235,6 +235,8 @@ void getTime(TinyGPSPlus* gps) {
 
   hora += 2; // Convertir a hora local
 
+  if (hora >= 24) hora-=24;
+
   // Si cualquier valor (minuto/segundo/hora) solo tiene un dígito, añadirle un cero a la izquierda
   
   horaStr = (hora < 10) ? zero += hora : String(hora); 
