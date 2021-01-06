@@ -25,8 +25,3 @@ Every folder whose name starts with 'cpu' contains the code for each MCU.
 
 ### test_
 Every folder whose name starts with 'test', contains the code used to test some function of the hab in the past.
-
-## Author
-Adrián Escalona
-Twitter: @a7escalona
-E-mail: adri7escalona@gmail.com
